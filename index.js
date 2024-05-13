@@ -60,6 +60,8 @@ async function run() {
         await client.connect();
         const TasteJourneyCollection = client.db('TasteJourneyDB').collection('TasteJourneyAllFood');
         const GalleryCollection = client.db('TasteJourneyDB').collection('GalleryData');
+        const TeamMemberCollection = client.db('TasteJourneyDB').collection('TeamMemberData');
+        const PurchaseCollection = client.db('TasteJourneyDB').collection('purchase');
 
 
         // auth related API
@@ -111,12 +113,6 @@ async function run() {
 
 
 
-
-
-        
-
-
-
         app.get('/GalleryData', logger, verifyToken, async (req, res) => {
             console.log('Query email:',req.query.email);
             console.log('User email:',req.user.email);
@@ -147,17 +143,66 @@ async function run() {
         })
 
 
-        app.post('/purchase', (req, res) => {
-            const purchaseData = req.body;
-            // Logic to store purchaseData in your database
-            // For example, using MongoDB
-            db.collection('purchases').insertOne(purchaseData)
-                .then(result => res.json({ insertedId: result.insertedId }))
-                .catch(error => {
-                    console.error('Error saving purchase:', error);
-                    res.status(500).json({ error: 'Internal server error' });
-                });
+
+
+        
+
+        app.get('/teamMember', async (req, res) => {
+            const teamMember = TeamMemberCollection.find();
+            const result = await teamMember.toArray();
+            res.send(result)
+        })
+
+
+
+
+
+
+
+        app.post('/purchase', async (req, res) => {
+            try {
+                const { food_name, quantity } = req.body;
+        
+                // Update the quantity of the purchased food item in the database
+                const updatedFood = await TasteJourneyCollection.findOneAndUpdate(
+                    { food_name },
+                    { $inc: { quantity: -quantity } }, // Decrement the quantity by the purchased amount
+                    { returnOriginal: false } // Return the updated document
+                );
+        
+                if (!updatedFood) {
+                    return res.status(404).json({ error: 'Food not found' });
+                }
+        
+                // Store purchase data in your database
+                const purchaseData = {
+                    ...req.body,
+                    buyerName: req.user.displayName,
+                    buyerEmail: req.user.email,
+                    buyingDate: new Date()
+                };
+            console.log(purchaseData)
+                const result = await PurchaseCollection.insertOne(purchaseData);
+        
+                res.json({ insertedId: result.insertedId, updatedFood });
+            } catch (error) {
+                console.error('Error saving purchase:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
         });
+        
+        
+
+        app.get('/purchase', async (req, res) => {
+            try {
+                const purchaseItems = await PurchaseCollection.find().toArray();
+                res.send(purchaseItems);
+            } catch (error) {
+                console.error('Error fetching purchase data:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        });
+        
 
 
 
