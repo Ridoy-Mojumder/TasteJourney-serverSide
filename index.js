@@ -36,7 +36,7 @@ const logger = (req, res, next) => {
 
 const verifyToken = (req, res, next) => {
     const token = req.cookies?.token;
-    console.log('Value of token middleware', token);
+    console.log('Value from token middleware', token);
     if (!token) {
         console.log('No token provided');
         return res.status(401).send({ message: 'Not authorized' });
@@ -112,7 +112,7 @@ async function run() {
                 const result = await TasteJourneyCollection.insertOne(newFood);
                 res.send(result);
             } catch (error) {
-                console.error('Error adding new food item:', error);
+                console.error('Error new food item:', error);
                 res.status(500).json({ error: 'Internal server error' });
             }
         });
