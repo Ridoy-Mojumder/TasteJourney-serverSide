@@ -17,8 +17,7 @@ app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.SET_USER}:${process.env.SET_PASS}@cluster0.23qqz48.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-let TasteJourneyCollection;
-let PurchaseCollection;
+
 
 
 
@@ -58,11 +57,10 @@ const verifyToken = (req, res, next) => {
 async function run() {
     try {
         await client.connect();
-        const db = client.db('TasteJourneyDB');
-        TasteJourneyCollection = db.collection('TasteJourneyAllFood');
-        const GalleryCollection = db.collection('GalleryData');
-        const TeamMemberCollection = db.collection('TeamMemberData');
-        PurchaseCollection = db.collection('purchase');
+        const TasteJourneyCollection = client.db('TasteJourneyDB').collection('TasteJourneyAllFood');
+        const GalleryCollection = client.db('TasteJourneyDB').collection('GalleryData');
+        const TeamMemberCollection = client.db('TasteJourneyDB').collection('TeamMemberData');
+        const PurchaseCollection = client.db('TasteJourneyDB').collection('purchase');
 
 
 
@@ -74,7 +72,7 @@ async function run() {
                 httpOnly: true,
                 secure: false,
                 sameSite: 'strict',
-            }).send({ success: true, token }); // Send token back for client-side debugging if needed
+            }).send({ success: true, token }); 
         });
 
 
@@ -89,28 +87,7 @@ async function run() {
             res.send(foods);
         });
 
-        // app.post('/TasteJourneyAllFood', async (req, res) => {
-        //     const { food_name,food_image,food_category,added_by:{name, email},food_origin price, quantity, orderCount = 0,description } = req.body;
-        //     const newFood = {
-        //         food_name,
-        //         price,
-        //         quantity: Number(quantity),
-        //         orderCount: Number(orderCount),
-        //     };
-        //     console.log(newFood);
-        //     const result = await TasteJourneyCollection.insertOne(newFood);
-        //     res.send(result);
-        // });
-
-
-
-
-        // app.post('/TasteJourneyAllFood', async (req, res) => {
-        //     const newFood = req.body;
-        //     console.log(newFood);
-        //     const result = await TasteJourneyCollection.insertOne(newFood);
-        //     res.send(result);
-        //   })
+        
 
 
         app.post('/TasteJourneyAllFood', async (req, res) => {
