@@ -146,7 +146,12 @@ async function run() {
             res.send(result);
         });
 
-        
+        app.delete('/TasteJourneyAllFood/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log('Delete ID:', id);
+            const result = await TasteJourneyCollection.deleteOne({ _id: new ObjectId(id) });
+            res.send(result);
+        });
 
         // app.get('/GalleryData', logger, async (req, res) => {
         //     // console.log('Query email:', req.query.email);
