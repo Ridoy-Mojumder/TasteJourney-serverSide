@@ -9,7 +9,9 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173',
+        'https://tastejourney-45991.web.app',
+        'https://tastejourney-45991.firebaseapp.com'],
     credentials: true
 }));
 app.use(express.json());
@@ -54,9 +56,15 @@ const verifyToken = (req, res, next) => {
 };
 
 
+const cookieOption = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+}
+
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
         const TasteJourneyCollection = client.db('TasteJourneyDB').collection('TasteJourneyAllFood');
         const GalleryCollection = client.db('TasteJourneyDB').collection('GalleryData');
         const TeamMemberCollection = client.db('TasteJourneyDB').collection('TeamMemberData');
@@ -68,18 +76,14 @@ async function run() {
             const user = req.body;
             console.log('User for token', user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: false,
-                sameSite: 'strict',
-            }).send({ success: true, token }); 
+            res.cookie('token', token, cookieOption).send({ success: true, token });
         });
 
 
         app.post('/logout', async (req, res) => {
             const user = req.body;
             console.log('Logging out', user);
-            res.clearCookie('token').send({ success: true });
+            res.clearCookie('token',{...cookieOption, maxAge: 0}).send({ success: true });
         });
 
         app.get('/TasteJourneyAllFood', async (req, res) => {
@@ -87,7 +91,7 @@ async function run() {
             res.send(foods);
         });
 
-        
+
 
 
         app.post('/TasteJourneyAllFood', async (req, res) => {
@@ -149,15 +153,24 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/GalleryData', logger, verifyToken, async (req, res) => {
-            console.log('Query email:', req.query.email);
-            console.log('User email:', req.user.email);
-            console.log('User in valid token:', req.user);
-            const query = req.query.email ? { email: req.query.email } : {};
-            console.log("The query is:", query);
-            const result = await GalleryCollection.find(query).toArray();
+        // app.get('/GalleryData', logger, async (req, res) => {
+        //     // console.log('Query email:', req.query.email);
+        //     // console.log('User email:', req.user.email);
+        //     // console.log('User in valid token:', req.user);
+        //     // // const query = req.query.email ? { email: req.query.email } : {};
+        //     // console.log("The query is:", query);
+        //     const result = await GalleryCollection.find().toArray();
+        //     res.send(result);
+        // });
+
+
+        app.get('/GalleryData', async (req, res) => {
+            const result = await GalleryCollection.find().toArray();
             res.send(result);
         });
+
+
+
 
         app.post('/GalleryData', async (req, res) => {
             const newGalleryData = req.body;
@@ -181,7 +194,7 @@ async function run() {
             const newPurchases = req.body;
             const quantity = newPurchases.quantity;
             console.log(1, newPurchases);
-            console.log('quantity',quantity);
+            console.log('quantity', quantity);
             const id = req.params.id;
             await TasteJourneyCollection.updateOne(
                 { _id: new ObjectId(id) },
@@ -241,7 +254,7 @@ async function run() {
 
 
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensure the client will close when you finish/error
