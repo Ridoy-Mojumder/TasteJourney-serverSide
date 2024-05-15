@@ -164,10 +164,7 @@ async function run() {
         // });
 
 
-        app.get('/GalleryData', async (req, res) => {
-            const result = await GalleryCollection.find().toArray();
-            res.send(result);
-        });
+        
 
 
 
