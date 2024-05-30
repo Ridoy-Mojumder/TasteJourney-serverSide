@@ -8,6 +8,8 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
+const chats = require('./data/data');
+
 app.use(cors({
     origin: ['http://localhost:5173',
         'https://tastejourney-45991.web.app',
@@ -69,6 +71,7 @@ async function run() {
         const GalleryCollection = client.db('TasteJourneyDB').collection('GalleryData');
         const TeamMemberCollection = client.db('TasteJourneyDB').collection('TeamMemberData');
         const PurchaseCollection = client.db('TasteJourneyDB').collection('purchase');
+        const chatCollection = client.db('TasteJourneyDB').collection('chats');
 
 
 
@@ -86,10 +89,26 @@ async function run() {
             res.clearCookie('token',{...cookieOption, maxAge: 0}).send({ success: true });
         });
 
+
+
+
+
+        app.get('/chats', (req, res) => {
+            res.send(chats);
+        });
+
+
+
+
+
+
         app.get('/TasteJourneyAllFood', async (req, res) => {
             const foods = await TasteJourneyCollection.find().toArray();
             res.send(foods);
         });
+
+
+        
 
 
 
